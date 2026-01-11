@@ -1,0 +1,67 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.9'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.graalvm.buildtools.native' version '0.10.6'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'sink-connect'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://packages.confluent.io/maven/'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-data-cassandra'
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Apache Spark dependencies
+    implementation 'org.apache.spark:spark-core_2.13:3.5.0'
+    implementation 'org.apache.spark:spark-sql_2.13:3.5.0'
+    implementation 'org.apache.spark:spark-streaming_2.13:3.5.0'
+    implementation 'org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0'
+    implementation 'org.apache.spark:spark-streaming-kafka-0-10_2.13:3.5.0'
+
+    // Kafka Streams and KSQL
+    implementation 'org.apache.kafka:kafka-streams'
+    implementation 'io.confluent:ksql-api-client:7.5.0'
+
+    // Jackson for JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Retry support
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
