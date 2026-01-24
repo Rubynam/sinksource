@@ -1,4 +1,4 @@
-package com.example.sinkconnect.config;
+package com.example.sinkconnect.infrastructure.config;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
@@ -37,12 +37,21 @@ public class SparkConfig {
                 .set("spark.executor.cores", String.valueOf(executorCores))
                 .set("spark.driver.memory", driverMemory)
                 .set("spark.sql.shuffle.partitions", String.valueOf(shufflePartitions))
-                .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+                .set("spark.serializer", "org.apache.spark.serializer.JavaSerializer")
                 .set("spark.kryo.registrationRequired", "false")
                 .set("spark.sql.streaming.checkpointLocation", "/tmp/spark-checkpoint")
                 .set("spark.streaming.kafka.maxRatePerPartition", "1000")
+                .set("spark.sql.adaptive.coalescePartitions.enabled", "true")
                 .set("spark.sql.adaptive.enabled", "true")
-                .set("spark.sql.adaptive.coalescePartitions.enabled", "true");
+                .set("spark.driver.blockManager.port", "0")
+                .set("spark.sql.streaming.stateStore.providerClass",
+                        "org.apache.spark.sql.execution.streaming.state.RocksDBStateStoreProvider")
+                .set("spark.sql.streaming.statefulOperator.checkCorrectness.enabled", "true")
+                // State timeout - tuy chỉnh theo window duration
+                .set("spark.sql.streaming.stateStore.minDeltasForSnapshot", "10")
+                // Watermark delay tolerance
+                .set("spark.sql.streaming.schemaInference", "true")
+                .set("spark.blockManager.port", "0");
     }
 
     @Bean

@@ -16,7 +16,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("candles_1m")
+@Table("chart_m1")
 public class Candle1mEntity {
 
     @PrimaryKeyColumn(name = "source", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
@@ -24,9 +24,6 @@ public class Candle1mEntity {
 
     @PrimaryKeyColumn(name = "symbol", ordinal = 1, type = PrimaryKeyType.PARTITIONED)
     private String symbol;
-
-    @PrimaryKeyColumn(name = "omsServerId", ordinal = 2, type = PrimaryKeyType.PARTITIONED)
-    private String omsServerId;
 
     @PrimaryKeyColumn(name = "timestamp", ordinal = 3, type = PrimaryKeyType.CLUSTERED)
     private Instant timestamp;

@@ -1,4 +1,4 @@
-package com.example.sinkconnect.config;
+package com.example.sinkconnect.infrastructure.config;
 
 import com.example.sinkconnect.domain.PriceEventMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

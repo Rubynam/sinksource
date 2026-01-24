@@ -28,26 +28,43 @@ repositories {
     }
 }
 
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'io.netty', module: 'netty-transport-classes-kqueue:4.1.130.Final'
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-data-cassandra'
     implementation 'org.springframework.kafka:spring-kafka'
 
     // Apache Spark dependencies
-    implementation 'org.apache.spark:spark-core_2.13:3.5.0'
-    implementation 'org.apache.spark:spark-sql_2.13:3.5.0'
-    implementation 'org.apache.spark:spark-streaming_2.13:3.5.0'
-    implementation 'org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0'
-    implementation 'org.apache.spark:spark-streaming-kafka-0-10_2.13:3.5.0'
+    implementation('org.apache.spark:spark-core_2.13:4.0.0') {
 
+        exclude group: 'log4j'
+        exclude group: 'commons-logging'
+    }
+
+    implementation('org.apache.spark:spark-sql_2.13:4.0.0') {
+        exclude group: 'log4j'
+        exclude group: 'commons-logging'
+    }
+    // Logging
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'ch.qos.logback:logback-classic'
+
+    implementation 'org.apache.spark:spark-streaming_2.13:4.0.0'
+    implementation 'org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0'
+    implementation 'org.apache.spark:spark-streaming-kafka-0-10_2.13:4.0.0'
     // Kafka Streams and KSQL
     implementation 'org.apache.kafka:kafka-streams'
-    implementation 'io.confluent:ksql-api-client:7.5.0'
 
     // Jackson for JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
+    implementation("io.reactivex.rxjava3:rxjava:3.1.12")
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -55,6 +72,8 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework:spring-aspects'
 
+    implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    compileOnly "io.netty:netty-all:4.2.7.Final"
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
@@ -62,6 +81,23 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+def jvmArgs = [
+        '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
+        '--add-opens=java.base/java.nio=ALL-UNNAMED',
+        '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+        '--add-opens=java.base/sun.util.calendar=ALL-UNNAMED',
+        '--add-opens=java.base/java.util.concurrent=ALL-UNNAMED',
+        '--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED',
+        '--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED'
+]
+
+bootRun {
+    // Add individual JVM arguments
+    jvmArgs += jvmArgs
+}
+
+tasks.withType(JavaExec) {
+    jvmArgs += jvmArgs
 }

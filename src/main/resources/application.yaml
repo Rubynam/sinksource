@@ -9,6 +9,8 @@ spring:
     keyspace-name: market
     local-datacenter: ${SCYLLA_DATACENTER:datacenter1}
     schema-action: none
+    username: market_user
+    password: abc@1234
     request:
       timeout: 30s
       consistency: quorum
@@ -44,14 +46,11 @@ spring:
 # Custom Application Configuration
 sink-connector:
   # Kafka Topics
-  topics:
-    binance: inbound-data-binance
-    huobi: inbound-data-huobi
-    candles-1m: candles-1m
+  topic: inbound-symbol-source
 
   # Apache Spark Configuration
   spark:
-    enabled: ${SPARK_ENABLED:false}
+    enabled: ${SPARK_ENABLED:true}
     app-name: CryptoSinkConnector
     master: ${SPARK_MASTER:local[*]}
     executor:
@@ -62,15 +61,11 @@ sink-connector:
     sql:
       shuffle-partitions: 10
     streaming:
-      batch-interval: 10s
+      batch-interval: 10 seconds
       checkpoint-location: ${SPARK_CHECKPOINT_DIR:/tmp/spark-checkpoint}
-      watermark-delay: 30s
+      watermark-delay: 30 seconds
       window-duration: 1 minute
-
-  # KSQL Configuration
-  ksql:
-    server-url: ${KSQL_SERVER_URL:http://localhost:8088}
-    timeout-ms: 30000
+      write-mode: append
 
   # Retry Configuration
   retry:

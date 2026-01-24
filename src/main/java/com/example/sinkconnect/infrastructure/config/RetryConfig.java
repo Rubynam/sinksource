@@ -1,4 +1,4 @@
-package com.example.sinkconnect.config;
+package com.example.sinkconnect.infrastructure.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
