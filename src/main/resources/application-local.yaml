@@ -1,0 +1,3 @@
+logging:
+  stream:
+    debug: true

@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 
-public final class TimeConverter {
+public final class Formatter {
 
-    private TimeConverter(){
+    private Formatter(){
         //do nothing
     }
 

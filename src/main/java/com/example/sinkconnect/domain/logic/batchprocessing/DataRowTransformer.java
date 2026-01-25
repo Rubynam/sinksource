@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Row;
 import org.springframework.stereotype.Component;
 
-import static com.example.sinkconnect.utils.TimeConverter.convertToBigDecimal;
-import static com.example.sinkconnect.utils.TimeConverter.convertToInstant;
+import static com.example.sinkconnect.utils.Formatter.convertToBigDecimal;
+import static com.example.sinkconnect.utils.Formatter.convertToInstant;
 
 @Component
 @Slf4j

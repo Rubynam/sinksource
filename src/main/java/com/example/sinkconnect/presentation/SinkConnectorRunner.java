@@ -53,6 +53,9 @@ public class SinkConnectorRunner {
     @Value(value = "${sink-connector.spark.streaming.checkpoint-location}")
     private String checkpointLocation;
 
+    @Value(value="${logging.stream.debug}")
+    private boolean enableDebug;
+
 
     public SinkConnectorRunner(DebugSparkProcessorCommand command, OhlcProcessorCommand ohlcProcessorCommand, SparkSession sparkSession) {
         this.command = command;
@@ -94,16 +97,17 @@ public class SinkConnectorRunner {
                 }
             });
 
-            executorService.submit(()->{
-                try{
-                    var debugProfile = buildStreamProfile("debug",stream);
-                    command.command(debugProfile);
-                }catch (Exception e){
-                    log.error("Spark Streaming job failed", e);
+            if(enableDebug){
+                executorService.submit(()->{
+                    try{
+                        var debugProfile = buildStreamProfile("debug",stream);
+                        command.command(debugProfile);
+                    }catch (Exception e){
+                        log.error("Spark Streaming job failed", e);
 
-                }
-            });
-
+                    }
+                });
+            }
         } else {
             log.info("Spark Streaming is disabled. Using Kafka listener mode.");
         }
@@ -131,6 +135,7 @@ public class SinkConnectorRunner {
 
     @PreDestroy
     void tearDown(){
+        sparkSession.stop();
         executorService.shutdown();
     }
 }

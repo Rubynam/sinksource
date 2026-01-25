@@ -85,6 +85,8 @@ sink-connector:
 
 # Logging Configuration
 logging:
+  stream:
+    debug: false
   level:
     root: INFO
     com.example.sinkconnect: DEBUG
