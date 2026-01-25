@@ -59,7 +59,7 @@ sink-connector:
     driver:
       memory: 2g
     sql:
-      shuffle-partitions: 10
+      shuffle-partitions: 2
     streaming:
       batch-interval: 10 seconds
       checkpoint-location: ${SPARK_CHECKPOINT_DIR:/tmp/spark-checkpoint}
