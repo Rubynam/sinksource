@@ -108,7 +108,7 @@ public class AlertSystemService {
      * Check if alert system is running
      */
     public boolean isRunning() {
-        return alertEnabled && actorSystem != null && !actorSystem.isTerminated();
+        return alertEnabled && actorSystem != null && !actorSystem.whenTerminated().isCompleted();
     }
 
     /**

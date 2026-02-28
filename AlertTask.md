@@ -106,3 +106,39 @@ Kafka (chart1m-data)
      max-hit-count: 10
      outbox-poll-interval: 5s
    ```
+   
+### 6. Using redis for distributed locking and replace hashmap at Chart1mConsumerService line 68 previousPrices.
+- Technical requitements: You must use redis template to communicate redis.
+- Create a docker file to install standalone redis.
+- Create a CacheService to
+- The key pattern in redis must be `PREVIOOUS_PRICE:<SYMBOL>`
+- For the Memory Efficiency. Redis optimizes small hashes (typically under 512 entries) using a ziplist or listpack. This uses significantly less RAM than millions of individual top-level keys because it eliminates the per-key metadata overhead.
+### 7. [BUG] application-akka.conf can not pass Authentication user password and keyname space.
+- Detail 
+```text
+	Suppressed: com.datastax.oss.driver.api.core.auth.AuthenticationException: Authentication error on node /127.0.0.1:9042: Node /127.0.0.1:9042 requires authentication (org.apache.cassandra.auth.PasswordAuthenticator), but no authenticator configured
+		at com.datastax.oss.driver.internal.core.channel.ProtocolInitHandler$InitRequest.lambda$buildAuthenticator$5(ProtocolInitHandler.java:368) ~[java-driver-core-4.14.1.jar:na]
+		at java.base/java.util.Optional.orElseThrow(Optional.java:403) ~[na:na]
+		at com.datastax.oss.driver.internal.core.channel.ProtocolInitHandler$InitRequest.buildAuthenticator(ProtocolInitHandler.java:364) ~[java-driver-core-4.14.1.jar:na]
+		at com.datastax.oss.driver.internal.core.channel.ProtocolInitHandler$InitRequest.onResponse(ProtocolInitHandler.java:216) ~[java-driver-core-4.14.1.jar:na]
+		at com.datastax.oss.driver.internal.core.channel.ChannelHandlerRequest.onResponse(ChannelHandlerRequest.java:94) ~[java-driver-core-4.14.1.jar:na]
+		at com.datastax.oss.driver.internal.core.channel.InFlightHandler.channelRead(InFlightHandler.java:257) ~[java-driver-core-4.14.1.jar:na]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:442) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:361) ~[netty-codec-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:325) ~[netty-codec-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:444) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:412) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1357) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:440) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:420) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:868) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:166) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:796) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:732) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:658) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
+		... 4 common frames omitted
+```

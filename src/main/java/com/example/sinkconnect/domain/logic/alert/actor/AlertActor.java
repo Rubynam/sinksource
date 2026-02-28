@@ -4,11 +4,12 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import akka.japi.function.Function;
 import akka.japi.function.Procedure;
 import akka.persistence.typed.PersistenceId;
 import akka.persistence.typed.javadsl.*;
-import com.example.sinkconnect.domain.logic.alert.SymbolStatus;
 import com.example.sinkconnect.domain.logic.alert.AlertStatus;
+import com.example.sinkconnect.domain.logic.alert.SymbolStatus;
 import com.example.sinkconnect.domain.logic.alert.service.OutboxService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +17,7 @@ import java.time.Instant;
 
 /**
  * AlertActor - Event Sourced Actor for Price Alert Processing
- *
+ * <p>
  * Responsibilities:
  * 1. Maintains alert state (hitCount, status, symbolStatus)
  * 2. Matches incoming prices against alert conditions
@@ -31,7 +32,7 @@ public class AlertActor extends EventSourcedBehavior<AlertCommand, AlertEvent, A
     private final OutboxService outboxService;
     private final String alertId;
 
-    private AlertActor(String alertId, OutboxService outboxService, ActorContext<AlertCommand> context) {
+    public AlertActor(String alertId, OutboxService outboxService) {
         super(PersistenceId.of("Alert", alertId));
         this.alertId = alertId;
         this.outboxService = outboxService;
@@ -83,8 +84,14 @@ public class AlertActor extends EventSourcedBehavior<AlertCommand, AlertEvent, A
                         cmd.getAlertId(), cmd.getSource(), cmd.getSymbol(), cmd.getTargetPrice()));
     }
 
-    public static Behavior<ActorRef<AlertCommand>> create(String alertId, OutboxService outboxService) {
-        return Behaviors.setup(context -> new AlertActor(alertId, outboxService, context));
+    public static Behavior<AlertCommand> create(String alertId, OutboxService outboxService) {
+//        return Behaviors.setup(context -> new AlertActor(alertId, outboxService));
+        return Behaviors.setup(new Function<ActorContext<AlertCommand>, Behavior<AlertCommand>>() {
+            @Override
+            public Behavior<AlertCommand> apply(ActorContext<AlertCommand> param) throws Exception, Exception {
+                return new AlertActor(alertId, outboxService);
+            }
+        });
     }
 
     /**

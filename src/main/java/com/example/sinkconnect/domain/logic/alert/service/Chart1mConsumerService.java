@@ -4,9 +4,11 @@ import akka.Done;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.kafka.CommitterSettings;
+import akka.kafka.ConsumerMessage;
 import akka.kafka.ConsumerSettings;
 import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
+import akka.stream.OverflowStrategy;
 import akka.stream.javadsl.Keep;
 import akka.stream.javadsl.Sink;
 import com.example.sinkconnect.domain.common.model.Candle1m;
@@ -22,9 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 
@@ -37,8 +37,14 @@ import java.util.concurrent.CompletionStage;
  * 3. Group messages by (source, symbol)
  * 4. Fetch active alerts for each symbol from ScyllaDB
  * 5. Forward CheckPrice commands to AlertManagerActor
- * 6. Track previous price for cross detection (CROSS_ABOVE/CROSS_BELOW)
+ * 6. Track previous price for cross detection using Redis (CROSS_ABOVE/CROSS_BELOW)
  * 7. Commit offsets after processing
+ *
+ * Redis Integration:
+ * - Replaces HashMap for previous prices (distributed cache)
+ * - Key pattern: PREVIOUS_PRICE:<SOURCE>:<SYMBOL>
+ * - Memory-efficient: Redis optimizes small hashes
+ * - TTL: 1 hour (prevents stale data)
  */
 @Slf4j
 @Service
@@ -48,6 +54,7 @@ public class Chart1mConsumerService {
     private final ActorRef<AlertManagerActor.Command> alertManager;
     private final PriceAlertRepository alertRepository;
     private final ObjectMapper objectMapper;
+    private final CacheService cacheService;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -61,18 +68,17 @@ public class Chart1mConsumerService {
     @Value("${sink-connector.alert.backpressure-buffer-size:1000}")
     private int backpressureBufferSize;
 
-    // Track previous prices for cross detection
-    private final Map<String, BigDecimal> previousPrices = new HashMap<>();
-
     public Chart1mConsumerService(
             ActorSystem<?> actorSystem,
             ActorRef<AlertManagerActor.Command> alertManager,
             PriceAlertRepository alertRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            CacheService cacheService) {
         this.actorSystem = actorSystem;
         this.alertManager = alertManager;
         this.alertRepository = alertRepository;
         this.objectMapper = objectMapper;
+        this.cacheService = cacheService;
     }
 
     /**
@@ -97,7 +103,7 @@ public class Chart1mConsumerService {
         // Build Akka Streams pipeline with backpressure
         return Consumer.committableSource(consumerSettings, Subscriptions.topics(chart1mTopic))
                 // Backpressure: Buffer up to N messages
-                .buffer(backpressureBufferSize, akka.stream.OverflowStrategy.backpressure())
+                .buffer(backpressureBufferSize, OverflowStrategy.backpressure())
 
                 // Parse JSON to Candle1m
                 .map(msg -> {
@@ -115,16 +121,10 @@ public class Chart1mConsumerService {
 
                 // Process each candle
                 .map(msg -> {
-                    processCandle(msg.candle);
+                    doMatching(msg.candle);
                     return msg.committableOffset;
                 })
-
-                // Batch commit offsets for performance
-                .batch(100, akka.kafka.javadsl.Committer::offsetsFromOffset, (batch, offset) -> {
-                    batch.updated(offset);
-                    return batch;
-                })
-                .mapAsync(3, batch -> batch.commitJavadsl())
+                .mapAsync(3, ConsumerMessage.Committable::commitJavadsl)
 
                 // Run the stream
                 .toMat(Sink.ignore(), Keep.right())
@@ -134,7 +134,7 @@ public class Chart1mConsumerService {
     /**
      * Process a single candle - fetch alerts and forward to AlertManager
      */
-    private void processCandle(Candle1m candle) {
+    private void doMatching(Candle1m candle) {
         try {
             String symbol = candle.getSymbol();
             String source = candle.getSource();
@@ -145,12 +145,11 @@ public class Chart1mConsumerService {
                 return;
             }
 
-            // Get previous price for cross detection
-            String priceKey = makePriceKey(source, symbol);
-            BigDecimal previousPrice = previousPrices.get(priceKey);
+            // Get previous price for cross detection from Redis
+            BigDecimal previousPrice = cacheService.getPreviousPrice(source, symbol);
 
             // Fetch active alerts for this symbol from ScyllaDB
-            List<PriceAlertEntity> alerts = alertRepository.findActiveAlertsBySymbolAndSource(symbol, source);
+            List<PriceAlertEntity> alerts = alertRepository.findActiveAlertsBySymbolAndSource(symbol, source, candle.getClose());
 
             if (alerts.isEmpty()) {
                 log.debug("No active alerts for {}-{}, skipping", source, symbol);
@@ -176,8 +175,8 @@ public class Chart1mConsumerService {
                         source, symbol, currentPrice, previousPrice, alerts.size());
             }
 
-            // Update previous price for next iteration
-            previousPrices.put(priceKey, currentPrice);
+            // Update previous price in Redis for next iteration
+            cacheService.setPreviousPrice(source, symbol, currentPrice);
 
         } catch (Exception e) {
             log.error("Error processing candle for {}-{}: {}",
@@ -193,16 +192,12 @@ public class Chart1mConsumerService {
         // ActorSystem shutdown will automatically stop the stream
     }
 
-    private String makePriceKey(String source, String symbol) {
-        return source + ":" + symbol;
-    }
-
     // Helper class to carry Kafka committable offset with parsed message
     private static class MessageWithCommit {
         final Candle1m candle;
-        final akka.kafka.javadsl.Consumer.CommittableOffset committableOffset;
+        final ConsumerMessage.CommittableOffset committableOffset;
 
-        MessageWithCommit(Candle1m candle, akka.kafka.javadsl.Consumer.CommittableOffset committableOffset) {
+        MessageWithCommit(Candle1m candle, ConsumerMessage.CommittableOffset committableOffset) {
             this.candle = candle;
             this.committableOffset = committableOffset;
         }

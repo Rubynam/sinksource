@@ -2,6 +2,7 @@ package com.example.sinkconnect.infrastructure.config;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
+import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.Behaviors;
 import com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor;
 import com.example.sinkconnect.domain.logic.alert.service.OutboxService;
@@ -81,7 +82,8 @@ public class AkkaConfig {
 
         ActorRef<AlertManagerActor.Command> alertManager = actorSystem.systemActorOf(
                 AlertManagerActor.create(outboxService),
-                "alertManager"
+                "alertManager",
+                Props.empty()
         );
 
         log.info("AlertManagerActor created successfully");

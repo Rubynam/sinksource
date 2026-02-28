@@ -75,6 +75,10 @@ dependencies {
     implementation 'com.typesafe.akka:akka-persistence-cassandra_2.13:1.1.1'
     implementation 'com.typesafe.akka:akka-serialization-jackson_2.13:2.8.5'
 
+    // Redis for distributed caching
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'io.lettuce:lettuce-core'
+
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 

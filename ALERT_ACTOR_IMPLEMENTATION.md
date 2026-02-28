@@ -22,7 +22,7 @@ The `AlertActor` is the core component of the price alert system. It implements 
 │  - CreateAlert   │           │    - AlertCreated           │
 │  - CheckPrice    │ hitCount  │    - AlertTriggered         │
 │  - UpdateSymbol  │ status    │    - AlertDisabled          │
-│  - DisableAlert  │ symbolSta │    - AlertExpired           │
+│  - DisableAlert  │ symbolStats │    - AlertExpired           │
 │  - GetState      └──────────┘                              │
 │                                                             │
 │  Side Effects:                                              │

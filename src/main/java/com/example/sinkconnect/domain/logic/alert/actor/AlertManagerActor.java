@@ -9,8 +9,8 @@ import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
-import com.example.sinkconnect.domain.logic.alert.service.OutboxService;
 import com.example.sinkconnect.domain.logic.alert.SymbolStatus;
+import com.example.sinkconnect.domain.logic.alert.service.OutboxService;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 /**
  * AlertManagerActor - Manages lifecycle of AlertActors using Cluster Sharding
- *
+ * <p>
  * Responsibilities:
  * 1. Routes commands to correct AlertActor by alertId
  * 2. Spawns new AlertActors on demand
@@ -50,7 +50,8 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
 
     // ==================== COMMANDS ====================
 
-    public interface Command extends Serializable {}
+    public interface Command extends Serializable {
+    }
 
     /**
      * Route a command to a specific alert
@@ -186,9 +187,10 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
             ClusterSharding sharding = ClusterSharding.get(context.getSystem());
 
             // Initialize cluster sharding for AlertActor entities
-            sharding.init(Entity.of(ALERT_ENTITY_KEY, entityContext ->
+            EntityTypeKey<AlertCommand> alertEntityKey =
+                    EntityTypeKey.create(AlertCommand.class, "Alert");
+            sharding.init(Entity.of(alertEntityKey, entityContext ->
                     AlertActor.create(entityContext.getEntityId(), outboxService)
-
             ));
 
             return new AlertManagerActor(context, sharding, outboxService);
@@ -224,7 +226,7 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
      * Route a command to a specific AlertActor (via cluster sharding)
      */
     private Behavior<Command> onRouteToAlert(RouteToAlert cmd) {
-        ActorRef<AlertCommand> alertRef = (ActorRef<AlertCommand>) sharding.entityRefFor(,cmd.alertId);
+        var alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, cmd.alertId);
         alertRef.tell(cmd.alertCommand);
 
         log.debug("Routed command {} to alert {}", cmd.alertCommand.getClass().getSimpleName(), cmd.alertId);
@@ -273,7 +275,7 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
                 new AlertCommand.UpdateSymbolStatus(cmd.symbolStatus);
 
         alertIds.keySet().forEach(alertId -> {
-            ActorRef<AlertCommand> alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, alertId);
+            var alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, alertId);
             alertRef.tell(updateCmd);
         });
 
@@ -300,7 +302,7 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
                 new AlertCommand.CheckPrice(cmd.currentPrice, cmd.previousPrice);
 
         alertIds.keySet().forEach(alertId -> {
-            ActorRef<AlertCommand> alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, alertId);
+            var alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, alertId);
             alertRef.tell(checkPriceCmd);
         });
 
