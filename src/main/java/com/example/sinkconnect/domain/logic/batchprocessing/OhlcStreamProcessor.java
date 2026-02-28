@@ -1,7 +1,7 @@
 package com.example.sinkconnect.domain.logic.batchprocessing;
 
-import com.example.sinkconnect.domain.spark.SparkStreamProfile;
-import com.example.sinkconnect.domain.spark.WriteOptions;
+import com.example.sinkconnect.domain.logic.spark.SparkStreamProfile;
+import com.example.sinkconnect.domain.logic.spark.WriteOptions;
 import com.example.sinkconnect.enumeration.ChartType;
 import com.example.sinkconnect.infrastructure.entity.Candle1mEntity;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ public class OhlcStreamProcessor extends SchemaProcessor{
 
     private final ScyllaWriteService scyllaWriteService;
     private final DataRowTransformer dataRowTransformer;
+    private final CandlePublishService candlePublishService;
 
     public Dataset<Row> read(SparkStreamProfile input) {
         var kafkaStream = input.getDataStreamReader();
@@ -55,6 +56,10 @@ public class OhlcStreamProcessor extends SchemaProcessor{
 
                     log.info("Saving {} candles", candles.size());
                     scyllaWriteService.writeCandles1m(candles);
+
+                    // Publish candles to Kafka topic for alert processing
+                    log.info("Publishing {} candles to Kafka", candles.size());
+                    candlePublishService.publishCandles(candles);
                 })
                 .outputMode(writeOptions.getWriteMode())
                 .trigger(Trigger.ProcessingTime(writeOptions.getInterval()))

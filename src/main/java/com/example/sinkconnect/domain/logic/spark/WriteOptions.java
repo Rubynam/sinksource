@@ -1,4 +1,4 @@
-package com.example.sinkconnect.domain.spark;
+package com.example.sinkconnect.domain.logic.spark;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

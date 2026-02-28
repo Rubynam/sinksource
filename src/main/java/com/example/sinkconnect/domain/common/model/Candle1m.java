@@ -1,4 +1,4 @@
-package com.example.sinkconnect.domain;
+package com.example.sinkconnect.domain.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

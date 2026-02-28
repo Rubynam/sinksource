@@ -47,6 +47,8 @@ spring:
 sink-connector:
   # Kafka Topics
   topic: inbound-symbol-source
+  topics:
+    chart1m-output: chart1m-data
 
   # Apache Spark Configuration
   spark:
@@ -82,6 +84,17 @@ sink-connector:
     ttl:
       candles-1m: 7776000  # 90 days
       candles-aggregated: 31536000  # 1 year
+
+  # Alert System Configuration
+  alert:
+    enabled: ${ALERT_ENABLED:true}
+    consumer-group: chart1m-alert-consumer
+    backpressure-buffer-size: 1000
+    max-hit-count: 10
+    outbox-poll-interval-ms: 5000  # Poll every 5 seconds
+    outbox-batch-size: 100
+    outbox-max-retries: 3
+    outbox-cleanup-cron: "0 0 2 * * ?"  # Daily at 2 AM
 
 # Logging Configuration
 logging:

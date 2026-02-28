@@ -1,14 +1,13 @@
 package com.example.sinkconnect.domain.logic.batchprocessing;
 
-import com.example.sinkconnect.domain.spark.SparkStreamProfile;
-import com.example.sinkconnect.domain.spark.WriteOptions;
+import com.example.sinkconnect.domain.logic.spark.SparkStreamProfile;
+import com.example.sinkconnect.domain.logic.spark.WriteOptions;
 import com.example.sinkconnect.enumeration.ChartType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.streaming.StreamingQueryException;
-import org.apache.spark.sql.streaming.Trigger;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeoutException;

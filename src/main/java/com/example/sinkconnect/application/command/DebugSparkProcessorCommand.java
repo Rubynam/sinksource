@@ -1,7 +1,7 @@
 package com.example.sinkconnect.application.command;
 
 import com.example.sinkconnect.domain.logic.batchprocessing.DataLoggingStream;
-import com.example.sinkconnect.domain.spark.SparkStreamProfile;
+import com.example.sinkconnect.domain.logic.spark.SparkStreamProfile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;

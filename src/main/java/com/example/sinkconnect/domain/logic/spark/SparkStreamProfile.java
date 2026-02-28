@@ -1,4 +1,4 @@
-package com.example.sinkconnect.domain.spark;
+package com.example.sinkconnect.domain.logic.spark;
 
 import com.example.sinkconnect.enumeration.ChartType;
 import lombok.*;

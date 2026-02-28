@@ -2,10 +2,9 @@ package com.example.sinkconnect.presentation;
 
 import com.example.sinkconnect.application.command.DebugSparkProcessorCommand;
 import com.example.sinkconnect.application.command.OhlcProcessorCommand;
-import com.example.sinkconnect.domain.spark.SparkStreamProfile;
-import com.example.sinkconnect.domain.spark.WriteOptions;
+import com.example.sinkconnect.domain.logic.spark.SparkStreamProfile;
+import com.example.sinkconnect.domain.logic.spark.WriteOptions;
 import com.example.sinkconnect.enumeration.ChartType;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;

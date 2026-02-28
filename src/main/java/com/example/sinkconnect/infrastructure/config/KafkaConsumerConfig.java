@@ -1,6 +1,6 @@
 package com.example.sinkconnect.infrastructure.config;
 
-import com.example.sinkconnect.domain.PriceEventMessage;
+import com.example.sinkconnect.domain.common.model.PriceEventMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
