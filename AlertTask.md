@@ -142,3 +142,21 @@ Kafka (chart1m-data)
 		at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562) ~[netty-transport-4.1.130.Final.jar:4.1.130.Final]
 		... 4 common frames omitted
 ```
+
+### 8. [BUG] unconfigure table all_persistence_ids and failed to persist event
+```text
+com.datastax.oss.driver.api.core.servererrors.InvalidQueryException: unconfigured table all_persistence_ids
+Failed to persist event type [akka.cluster.sharding.internal.EventSourcedRememberEntitiesCoordinatorStore$MigrationMarker$] with sequence number [1] for persistenceId [/sharding/AlertCoordinator].
+```
+
+### 9 [BUG] Performance issue
+Context
+```sql
+
+SELECT * FROM market.price_alerts WHERE symbol = 'BTCUSDT' AND source = 'BINANCE' AND status = 'ENABLED' AND target_price >= 80000 ALLOW FILTERING
+```
+Query plainer can not find the suitable index for this. Because you don't create it.
+Solution:
+- Create file index-magement.sql
+- You create a btree index included (symbol, source, status, target_price desc)
+- Optimize query get the latest prices (follow updated_at)

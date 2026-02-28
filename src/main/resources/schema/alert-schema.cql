@@ -70,6 +70,12 @@ CREATE TABLE IF NOT EXISTS market.akka_metadata (
     properties map<text, text>
 );
 
+-- Akka Persistence All Persistence IDs table
+-- Required for tracking all persistence IDs and cluster sharding remember-entities
+CREATE TABLE IF NOT EXISTS market.all_persistence_ids (
+    persistence_id text PRIMARY KEY
+);
+
 -- Outbox Pattern table: Stores notifications to be published
 CREATE TABLE IF NOT EXISTS market.alert_outbox (
     outbox_id timeuuid,
