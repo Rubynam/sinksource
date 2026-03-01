@@ -26,10 +26,10 @@ public class ScyllaWriteService {
                 .buffer(batchSize)
                 .doOnNext(entities->{
                     retryTemplate.execute(context -> {
-                        log.info("Writing {} candles to ScyllaDB (attempt: {})",
-                                entities.size(), context.getRetryCount() + 1);
+//                        log.info("Writing {} candles to ScyllaDB (attempt: {})",
+//                                entities.size(), context.getRetryCount() + 1);
                         candle1mRepository.saveAll(entities);
-                        log.info("Successfully wrote {} candles to ScyllaDB", entities.size());
+//                        log.info("Successfully wrote {} candles to ScyllaDB", entities.size());
                         return null;
                     });
                 })

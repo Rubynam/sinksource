@@ -46,7 +46,7 @@ public class OutboxService {
                     .retryCount(0)
                     .build();
 
-            outboxRepository.save(entity);
+//            outboxRepository.save(entity);//save notification
 
             log.info("Saved outbox message for alert {} with type {}", alertId, messageType);
         } catch (JsonProcessingException e) {

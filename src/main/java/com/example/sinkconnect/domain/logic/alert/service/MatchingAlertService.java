@@ -104,7 +104,6 @@ public class MatchingAlertService {
         return Consumer.committableSource(consumerSettings, Subscriptions.topics(chart1mTopic))
                 // Backpressure: Buffer up to N messages
                 .buffer(backpressureBufferSize, OverflowStrategy.backpressure())
-
                 // Parse JSON to Candle1m
                 .map(msg -> {
                     try {
@@ -156,10 +155,22 @@ public class MatchingAlertService {
             } else {
                 // Register alerts with AlertManager if not already registered
                 alerts.forEach(alert -> {
+                    // Convert condition string to enum
+                    com.example.sinkconnect.domain.logic.alert.AlertCondition condition;
+                    try {
+                        condition = com.example.sinkconnect.domain.logic.alert.AlertCondition.valueOf(alert.getCondition());
+                    } catch (IllegalArgumentException e) {
+                        log.error("Invalid condition '{}' for alert {}, skipping", alert.getCondition(), alert.getAlertId());
+                        return;
+                    }
+
                     alertManager.tell(new AlertManagerActor.RegisterAlert(
                             alert.getAlertId(),
                             alert.getSymbol(),
-                            alert.getSource()
+                            alert.getSource(),
+                            alert.getTargetPrice(),
+                            condition,
+                            alert.getMaxHits() != null ? alert.getMaxHits() : 10 // Default to 10 if null
                     ));
                 });
 
@@ -171,7 +182,7 @@ public class MatchingAlertService {
                         previousPrice
                 ));
 
-                log.debug("Forwarded price check for {}-{}: current={}, previous={}, alerts={}",
+                log.info("Forwarded price check for {}-{}: current={}, previous={}, alerts={}",
                         source, symbol, currentPrice, previousPrice, alerts.size());
             }
 

@@ -160,3 +160,55 @@ Solution:
 - Create file index-magement.sql
 - You create a btree index included (symbol, source, status, target_price desc)
 - Optimize query get the latest prices (follow updated_at)
+
+### 10 [BUG] unknow identifier timebucket
+
+log
+```text
+2026-03-01T15:14:26.574+07:00 ERROR 73446 --- [sink-connect] [lt-dispatcher-3] tSourcedRememberEntitiesCoordinatorStore : Failed to persist event type [akka.cluster.sharding.internal.EventSourcedRememberEntitiesCoordinatorStore$MigrationMarker$] with sequence number [1] for persistenceId [/sharding/AlertCoordinator].
+
+com.datastax.oss.driver.api.core.servererrors.InvalidQueryException: Unknown identifier timebucket
+
+2026-03-01T15:14:26.575+07:00 ERROR 73446 --- [sink-connect] [lt-dispatcher-3] a.c.sharding.DDataShardCoordinator       : Alert: The ShardCoordinator stopping because the remember entities store stopped
+```
+
+Context:
+ - When i start AKAK actor and EntitiesCoordinatorStore , the properites timebucket not found, you need to review the whole project and check this config
+
+### 12 [BUG] Actor AKKA sharing fail
+logs
+```text
+java.lang.ClassCastException: class idea.debugger.rt.GeneratedEvaluationClass$1 cannot be cast to class akka.cluster.sharding.typed.internal.EntityTypeKeyImpl (idea.debugger.rt.GeneratedEvaluationClass$1 is in unnamed module of loader java.security.SecureClassLoader @2669bc63; akka.cluster.sharding.typed.internal.EntityTypeKeyImpl is in unnamed module of loader 'app')
+	at akka.cluster.sharding.typed.internal.ClusterShardingImpl.entityRefFor(ClusterShardingImpl.scala:269)
+	at idea.debugger.rt.GeneratedEvaluationClass.invoke(GeneratedEvaluationClass.java:11)
+	at java.base/java.lang.invoke.MethodHandle.invokeWithArguments(MethodHandle.java:732)
+	at com.intellij.rt.debugger.MethodInvoker.invokeInternal(MethodInvoker.java:223)
+	at com.intellij.rt.debugger.MethodInvoker.invoke1(MethodInvoker.java:35)
+	at com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor.lambda$onCheckPriceForSymbol$3(AlertManagerActor.java:305)
+	at java.base/java.util.HashMap$KeySet.forEach(HashMap.java:1008)
+	at com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor.onCheckPriceForSymbol(AlertManagerActor.java:304)
+```
+- Action: analyze this erro, find rootcause and update code
+
+### Task 13 [BUG] Alert could not trigger when price hit target
+logs
+```text
+Forwarded price check for Binance-BTCUSDT: current=64757.80000000, previous=64752.0, alerts=8
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert 17c55fe5-c28b-4993-b48f-e39c4f874df3 for symbol Binance-BTCUSDT (total alerts for symbol: 1)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert 50798aaa-c325-4377-9e07-ee6afc8f6552 for symbol Binance-BTCUSDT (total alerts for symbol: 2)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert c09c7483-b4ea-4f5b-a050-8af3c41ff3ec for symbol Binance-BTCUSDT (total alerts for symbol: 3)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert cd7fb2da-2158-4806-b8cf-35232196f947 for symbol Binance-BTCUSDT (total alerts for symbol: 4)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert 9f2a7bb7-bf5d-478f-93ed-001834294946 for symbol Binance-BTCUSDT (total alerts for symbol: 5)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert a690e549-6d12-4091-835c-443941a4ab9e for symbol Binance-BTCUSDT (total alerts for symbol: 6)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert 44aefa63-629c-4c2a-910e-6a2b200fd69f for symbol Binance-BTCUSDT (total alerts for symbol: 7)
+2026-03-01T15:59:23.146+07:00  INFO 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.l.alert.actor.AlertManagerActor  : Registered alert 15d55224-8a39-4504-a69e-461b46a1333f for symbol Binance-BTCUSDT (total alerts for symbol: 8)
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [lt-dispatcher-3] c.e.s.d.logic.alert.actor.AlertActor     : Alert c09c7483-b4ea-4f5b-a050-8af3c41ff3ec not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-24] c.e.s.d.logic.alert.actor.AlertActor     : Alert 50798aaa-c325-4377-9e07-ee6afc8f6552 not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-29] c.e.s.d.logic.alert.actor.AlertActor     : Alert 44aefa63-629c-4c2a-910e-6a2b200fd69f not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-15] c.e.s.d.logic.alert.actor.AlertActor     : Alert cd7fb2da-2158-4806-b8cf-35232196f947 not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-28] c.e.s.d.logic.alert.actor.AlertActor     : Alert 17c55fe5-c28b-4993-b48f-e39c4f874df3 not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [lt-dispatcher-5] c.e.s.d.logic.alert.actor.AlertActor     : Alert 15d55224-8a39-4504-a69e-461b46a1333f not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-26] c.e.s.d.logic.alert.actor.AlertActor     : Alert a690e549-6d12-4091-835c-443941a4ab9e not initialized, ignoring price check
+2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-25] c.e.s.d.logic.alert.actor.AlertActor     : Alert 9f2a7bb7-bf5d-478f-93ed-001834294946 not initialized, ignoring price check
+```
+- The problem is that, the first step, actor register alert price to local cache. Second step, i witness, AlertActor could not found the alert id and throw log not initialized, ignoring price check DUE TO the alert ID in cmd already have.

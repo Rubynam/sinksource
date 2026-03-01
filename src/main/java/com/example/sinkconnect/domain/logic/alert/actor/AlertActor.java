@@ -62,7 +62,7 @@ public class AlertActor extends EventSourcedBehavior<AlertCommand, AlertEvent, A
      */
     private Effect<AlertEvent, AlertState> onCreateAlert(
             AlertState state, AlertCommand.CreateAlert cmd) {
-
+        log.info("create a new alert {} cmd alertId {}", state.getAlertId(), cmd.getAlertId());
         if (state.getAlertId() != null) {
             log.warn("Alert {} already exists, ignoring create command", cmd.getAlertId());
             return Effect().none();

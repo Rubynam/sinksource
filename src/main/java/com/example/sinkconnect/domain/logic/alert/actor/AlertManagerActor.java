@@ -35,12 +35,8 @@ import java.util.Map;
 public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Command> {
 
     // Entity type key for cluster sharding
-    public static final EntityTypeKey<AlertCommand> ALERT_ENTITY_KEY = new EntityTypeKey<AlertCommand>() {
-        @Override
-        public String name() {
-            return "Alert";
-        }
-    };
+    public static final EntityTypeKey<AlertCommand> ALERT_ENTITY_KEY =
+            EntityTypeKey.create(AlertCommand.class, "Alert");
 
     private final ClusterSharding sharding;
     private final OutboxService outboxService;
@@ -78,15 +74,24 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
         String alertId;
         String symbol;
         String source;
+        BigDecimal targetPrice;
+        com.example.sinkconnect.domain.logic.alert.AlertCondition condition;
+        int maxHits;
 
         @JsonCreator
         public RegisterAlert(
                 @JsonProperty("alertId") String alertId,
                 @JsonProperty("symbol") String symbol,
-                @JsonProperty("source") String source) {
+                @JsonProperty("source") String source,
+                @JsonProperty("targetPrice") BigDecimal targetPrice,
+                @JsonProperty("condition") com.example.sinkconnect.domain.logic.alert.AlertCondition condition,
+                @JsonProperty("maxHits") int maxHits) {
             this.alertId = alertId;
             this.symbol = symbol;
             this.source = source;
+            this.targetPrice = targetPrice;
+            this.condition = condition;
+            this.maxHits = maxHits;
         }
     }
 
@@ -187,9 +192,7 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
             ClusterSharding sharding = ClusterSharding.get(context.getSystem());
 
             // Initialize cluster sharding for AlertActor entities
-            EntityTypeKey<AlertCommand> alertEntityKey =
-                    EntityTypeKey.create(AlertCommand.class, "Alert");
-            sharding.init(Entity.of(alertEntityKey, entityContext ->
+            sharding.init(Entity.of(ALERT_ENTITY_KEY, entityContext ->
                     AlertActor.create(entityContext.getEntityId(), outboxService)
             ));
 
@@ -239,8 +242,22 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
     private Behavior<Command> onRegisterAlert(RegisterAlert cmd) {
         String symbolKey = makeSymbolKey(cmd.source, cmd.symbol);
 
+        // Track alert in local map for broadcasting
         symbolToAlertIds.computeIfAbsent(symbolKey, k -> new HashMap<>())
                 .put(cmd.alertId, cmd.alertId);
+
+        // Initialize the AlertActor by sending CreateAlert command
+        // This ensures the actor is ready to receive CheckPrice commands
+        var alertRef = sharding.entityRefFor(ALERT_ENTITY_KEY, cmd.alertId);
+        AlertCommand.CreateAlert createCmd = new AlertCommand.CreateAlert(
+                cmd.alertId,
+                cmd.symbol,
+                cmd.source,
+                cmd.targetPrice,
+                cmd.condition,
+                cmd.maxHits
+        );
+        alertRef.tell(createCmd);
 
         log.info("Registered alert {} for symbol {}-{} (total alerts for symbol: {})",
                 cmd.alertId, cmd.source, cmd.symbol,

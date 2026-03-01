@@ -106,7 +106,7 @@ logging:
     debug: false
   level:
     root: INFO
-    com.example.sinkconnect: DEBUG
+    com.example.sinkconnect: INFO
     org.apache.spark: WARN
     org.apache.kafka: WARN
     com.datastax.oss.driver: WARN

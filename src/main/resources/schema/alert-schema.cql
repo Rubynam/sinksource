@@ -1,12 +1,7 @@
 -- Alert System Schema for ScyllaDB
 
 -- Keyspace (use existing market keyspace)
-CREATE KEYSPACE IF NOT EXISTS market
-WITH replication = {
-  'class': 'NetworkTopologyStrategy',
-  'datacenter1': 3
-}
-AND durable_writes = true;
+
 
 -- Alerts table: Stores price alert configurations
 CREATE TABLE IF NOT EXISTS market.price_alerts (
@@ -33,22 +28,37 @@ CREATE TABLE IF NOT EXISTS market.symbol_status (
 );
 
 -- Akka Persistence Journal table for event sourcing
+-- Based on official Akka Persistence Cassandra schema
+-- This table stores all events for event-sourced actors
 CREATE TABLE IF NOT EXISTS market.akka_journal (
     persistence_id text,
     partition_nr bigint,
     sequence_nr bigint,
     timestamp timeuuid,
-    event blob,
-    event_manifest text,
-    ser_id int,
-    ser_manifest text,
-    writer_uuid text,
+    timebucket text,              -- REQUIRED: Time-based partitioning for tag queries
+    writer_uuid text,             -- Actor system UUID that wrote the event
+    ser_id int,                   -- Serializer ID for the event
+    ser_manifest text,            -- Serializer manifest for the event
+    event_manifest text,          -- Event class name for deserialization
+    event blob,                   -- Serialized event data
+    meta_ser_id int,              -- Serializer ID for metadata
+    meta_ser_manifest text,       -- Serializer manifest for metadata
+    meta blob,                    -- Serialized metadata
+    tags set<text>,               -- Tags for events-by-tag queries
     PRIMARY KEY ((persistence_id, partition_nr), sequence_nr, timestamp)
 ) WITH CLUSTERING ORDER BY (sequence_nr DESC, timestamp DESC)
   AND gc_grace_seconds = 864000
   AND compaction = {
     'class': 'SizeTieredCompactionStrategy',
-    'enabled': true
+    'enabled': true,
+    'tombstone_compaction_interval': 86400,
+    'tombstone_threshold': 0.2,
+    'unchecked_tombstone_compaction': false,
+    'bucket_high': 1.5,
+    'bucket_low': 0.5,
+    'max_threshold': 32,
+    'min_threshold': 4,
+    'min_sstable_size': 50
   };
 
 -- Akka Persistence Snapshot table
@@ -76,6 +86,54 @@ CREATE TABLE IF NOT EXISTS market.all_persistence_ids (
     persistence_id text PRIMARY KEY
 );
 
+-- Akka Persistence Tag Views table
+-- Required for events-by-tag queries (event sourcing projections)
+-- This table enables efficient querying of events by their tags
+CREATE TABLE IF NOT EXISTS market.tag_views (
+    tag_name text,
+    persistence_id text,
+    sequence_nr bigint,
+    timebucket bigint,
+    timestamp timeuuid,
+    tag_pid_sequence_nr bigint,
+    writer_uuid text,
+    ser_id int,
+    ser_manifest text,
+    event_manifest text,
+    event blob,
+    meta_ser_id int,
+    meta_ser_manifest text,
+    meta blob,
+    PRIMARY KEY ((tag_name, timebucket), timestamp, persistence_id, tag_pid_sequence_nr)
+) WITH CLUSTERING ORDER BY (timestamp ASC, persistence_id ASC, tag_pid_sequence_nr ASC)
+  AND gc_grace_seconds = 864000
+  AND compaction = {
+    'class': 'TimeWindowCompactionStrategy',
+    'compaction_window_size': 1,
+    'compaction_window_unit': 'DAYS'
+  };
+
+-- Akka Persistence Tag Write Progress table
+-- Tracks the progress of tag writing for each persistence_id
+-- Used by the tag writer to know what has been written to tag_views
+CREATE TABLE IF NOT EXISTS market.tag_write_progress (
+    persistence_id text,
+    tag text,
+    sequence_nr bigint,
+    tag_pid_sequence_nr bigint,
+    offset timeuuid,
+    PRIMARY KEY (persistence_id, tag)
+);
+
+-- Akka Persistence Tag Scanning table
+-- Manages tag scanning state for events-by-tag queries
+-- Tracks which events have been scanned for tag extraction
+CREATE TABLE IF NOT EXISTS market.tag_scanning (
+    persistence_id text,
+    sequence_nr bigint,
+    PRIMARY KEY (persistence_id)
+);
+
 -- Outbox Pattern table: Stores notifications to be published
 CREATE TABLE IF NOT EXISTS market.alert_outbox (
     outbox_id timeuuid,
@@ -98,8 +156,6 @@ CREATE TABLE IF NOT EXISTS market.alert_outbox (
     'compaction_window_unit': 'DAYS'
   };
 
--- Secondary index for querying outbox by alert_id
-CREATE INDEX IF NOT EXISTS ON market.alert_outbox (alert_id);
 
 -- Alert trigger history for analytics
 CREATE TABLE IF NOT EXISTS market.alert_trigger_history (
