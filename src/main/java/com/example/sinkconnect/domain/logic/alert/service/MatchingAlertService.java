@@ -48,7 +48,7 @@ import java.util.concurrent.CompletionStage;
  */
 @Slf4j
 @Service
-public class Chart1mConsumerService {
+public class MatchingAlertService {
 
     private final ActorSystem<?> actorSystem;
     private final ActorRef<AlertManagerActor.Command> alertManager;
@@ -68,7 +68,7 @@ public class Chart1mConsumerService {
     @Value("${sink-connector.alert.backpressure-buffer-size:1000}")
     private int backpressureBufferSize;
 
-    public Chart1mConsumerService(
+    public MatchingAlertService(
             ActorSystem<?> actorSystem,
             ActorRef<AlertManagerActor.Command> alertManager,
             PriceAlertRepository alertRepository,

@@ -30,7 +30,7 @@ public class AlertSystemService {
 
     private final ActorSystem<Void> actorSystem;
     private final ActorRef<AlertManagerActor.Command> alertManager;
-    private final Chart1mConsumerService chart1mConsumerService;
+    private final MatchingAlertService matchingAlertService;
 
     @Value("${sink-connector.alert.enabled:true}")
     private boolean alertEnabled;
@@ -59,7 +59,7 @@ public class AlertSystemService {
         try {
             // Start Kafka consumer for chart1m-data topic
             log.info("Starting Chart1m Kafka consumer...");
-            consumerStream = chart1mConsumerService.startConsuming();
+            consumerStream = matchingAlertService.startConsuming();
 
             log.info("Alert System started successfully!");
             log.info("  - ActorSystem: {}", actorSystem.name());
@@ -91,7 +91,7 @@ public class AlertSystemService {
             // Stop Kafka consumer
             if (consumerStream != null) {
                 log.info("Stopping Chart1m Kafka consumer...");
-                chart1mConsumerService.stopConsuming();
+                matchingAlertService.stopConsuming();
             }
 
             // ActorSystem shutdown is handled by AkkaConfig @PreDestroy
