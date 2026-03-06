@@ -215,4 +215,24 @@ Forwarded price check for Binance-BTCUSDT: current=64757.80000000, previous=6475
 
 ### Task 14 [Migration] Akka framework is no longer free licence. You must change to apache pekko.
 Action: Read build gradle, remove akka and add Apache Pekko latest version.
+### Task 15 [Optimize] Fail tolerant and resilient
+- Action: Failed to get previous price for
+- CommitterSettings need to be used for recovery data in case of app crash.
+- Behaviour: After restarting service, service will consumer the messages in the gap time and handle logic.
+- You must write a detail plain at RecoveryPlain.mr
 
+### Task 16 [Optimize] NxM process event alert
+- Background: each event arriving, MatchingAlertService must query data from data, it can lead to be a potential netowrk and database.
+- Action: Find 3 solution to improve the performance that you must to exlude any approach related to hit dababase.
+  - Write you idea to optimize.md
+- Do not: Do not implement java code.
+
+### Task 16.1 Solution 3: Actor-Based Pre-Computed Alert Registry with Pub/Sub
+- Background: Check Task 16
+- Action: Write a presource code.md to implement this solution.
+  - Detailed Action: Create a shared entity used for caching.
+  - Shard data located at /tmp/cache/<symbol>.
+  - Create a schedule to control life cycle of shard entity.
+  - Event arriving, check shard data. if empty query database.
+### Task 16.2 Setup sharding path
+- Action: Read AlertManageActor, you 

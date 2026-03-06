@@ -27,13 +27,13 @@ import java.time.Instant;
  * 6. Persists events for state recovery
  */
 @Slf4j
-public class AlertActor extends EventSourcedBehavior<AlertCommand, AlertEvent, AlertState> {
+public class AlertActor extends EventSourcedBehavior<AlertCommand, AlertEvent, AlertState> { //thread model
 
     private final OutboxService outboxService;
     private final String alertId;
 
     public AlertActor(String alertId, OutboxService outboxService) {
-        super(PersistenceId.of("Alert", alertId));
+        super(PersistenceId.of("UserAlert", alertId));
         this.alertId = alertId;
         this.outboxService = outboxService;
     }

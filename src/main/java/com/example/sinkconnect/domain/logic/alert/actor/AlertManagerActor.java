@@ -196,6 +196,7 @@ public class AlertManagerActor extends AbstractBehavior<AlertManagerActor.Comman
                     AlertActor.create(entityContext.getEntityId(), outboxService)
             ));
 
+
             return new AlertManagerActor(context, sharding, outboxService);
         });
     }

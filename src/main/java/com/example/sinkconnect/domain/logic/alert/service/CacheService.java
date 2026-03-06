@@ -38,7 +38,7 @@ public class CacheService {
     private static final Duration PRICE_TTL = Duration.ofHours(1);
 
     /**
-     * Get previous price for a symbol
+     * Get previous price for a symbol with fault tolerance
      *
      * @param source Exchange source (e.g., "BINANCE")
      * @param symbol Trading symbol (e.g., "BTCUSDT")
@@ -65,8 +65,25 @@ public class CacheService {
                 return null;
             }
 
+        } catch (org.springframework.data.redis.RedisConnectionFailureException e) {
+            // Redis connection failure - this is expected during Redis downtime
+            // Log as WARN instead of ERROR to reduce noise in logs
+            log.warn("Redis connection failure when getting previous price for {}-{}: {}. " +
+                    "Alert processing will continue without cross detection.",
+                    source, symbol, e.getMessage());
+            return null;
+
+        } catch (org.springframework.data.redis.RedisSystemException e) {
+            // Redis system error (timeout, etc.)
+            log.warn("Redis system error when getting previous price for {}-{}: {}. " +
+                    "Alert processing will continue without cross detection.",
+                    source, symbol, e.getMessage());
+            return null;
+
         } catch (Exception e) {
-            log.error("Failed to get previous price for {}-{}: {}",
+            // Unexpected error - log as ERROR for investigation
+            log.error("Unexpected error getting previous price for {}-{}: {}. " +
+                    "Alert processing will continue without cross detection.",
                     source, symbol, e.getMessage(), e);
             return null;
         }
