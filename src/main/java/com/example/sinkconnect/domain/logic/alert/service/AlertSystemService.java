@@ -1,8 +1,8 @@
 package com.example.sinkconnect.domain.logic.alert.service;
 
-import akka.Done;
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
+import org.apache.pekko.Done;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
 import com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;

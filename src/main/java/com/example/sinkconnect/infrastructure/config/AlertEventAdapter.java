@@ -1,7 +1,7 @@
 package com.example.sinkconnect.infrastructure.config;
 
-import akka.persistence.journal.EventAdapter;
-import akka.persistence.journal.EventSeq;
+import org.apache.pekko.persistence.journal.EventAdapter;
+import org.apache.pekko.persistence.journal.EventSeq;
 
 /**
  * AlertEventAdapter - Optional event adapter for tagging/transformation

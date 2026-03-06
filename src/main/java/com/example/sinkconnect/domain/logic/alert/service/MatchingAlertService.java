@@ -1,16 +1,16 @@
 package com.example.sinkconnect.domain.logic.alert.service;
 
-import akka.Done;
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.kafka.CommitterSettings;
-import akka.kafka.ConsumerMessage;
-import akka.kafka.ConsumerSettings;
-import akka.kafka.Subscriptions;
-import akka.kafka.javadsl.Consumer;
-import akka.stream.OverflowStrategy;
-import akka.stream.javadsl.Keep;
-import akka.stream.javadsl.Sink;
+import org.apache.pekko.Done;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.kafka.CommitterSettings;
+import org.apache.pekko.kafka.ConsumerMessage;
+import org.apache.pekko.kafka.ConsumerSettings;
+import org.apache.pekko.kafka.Subscriptions;
+import org.apache.pekko.kafka.javadsl.Consumer;
+import org.apache.pekko.stream.OverflowStrategy;
+import org.apache.pekko.stream.javadsl.Keep;
+import org.apache.pekko.stream.javadsl.Sink;
 import com.example.sinkconnect.domain.common.model.Candle1m;
 import com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor;
 import com.example.sinkconnect.infrastructure.entity.PriceAlertEntity;

@@ -1,13 +1,13 @@
 package com.example.sinkconnect.domain.logic.alert.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.japi.function.Function;
-import akka.japi.function.Procedure;
-import akka.persistence.typed.PersistenceId;
-import akka.persistence.typed.javadsl.*;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.japi.function.Function;
+import org.apache.pekko.japi.function.Procedure;
+import org.apache.pekko.persistence.typed.PersistenceId;
+import org.apache.pekko.persistence.typed.javadsl.*;
 import com.example.sinkconnect.domain.logic.alert.AlertStatus;
 import com.example.sinkconnect.domain.logic.alert.SymbolStatus;
 import com.example.sinkconnect.domain.logic.alert.service.OutboxService;

@@ -1,9 +1,9 @@
 package com.example.sinkconnect.infrastructure.config;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Props;
-import akka.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.Props;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import com.example.sinkconnect.domain.logic.alert.actor.AlertManagerActor;
 import com.example.sinkconnect.domain.logic.alert.service.OutboxService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import jakarta.annotation.PreDestroy;
 
 /**
- * Akka System Configuration for Alert Processing
+ * Apache Pekko System Configuration for Alert Processing
  *
  * Responsibilities:
  * 1. Create ActorSystem with Cassandra persistence configuration
@@ -37,7 +37,7 @@ public class AkkaConfig {
     private ActorSystem<Void> actorSystem;
 
     /**
-     * Create Akka ActorSystem with Cassandra persistence
+     * Create Apache Pekko ActorSystem with Cassandra persistence
      */
     @Bean
     public ActorSystem<Void> actorSystem() {
@@ -46,22 +46,22 @@ public class AkkaConfig {
             return null;
         }
 
-        log.info("Initializing Akka ActorSystem for Alert processing");
+        log.info("Initializing Apache Pekko ActorSystem for Alert processing");
 
-        // Load Akka configuration from application-akka.conf
+        // Load Pekko configuration from application-akka.conf
         Config akkaConfig = ConfigFactory.load("application-akka.conf");
 
         // Create ActorSystem with guardian behavior
         actorSystem = ActorSystem.create(
                 Behaviors.setup(context -> {
-                    log.info("Akka ActorSystem started: {}", context.getSystem().name());
+                    log.info("Apache Pekko ActorSystem started: {}", context.getSystem().name());
                     return Behaviors.empty();
                 }),
                 "AlertSystem",
                 akkaConfig
         );
 
-        log.info("Akka ActorSystem initialized successfully");
+        log.info("Apache Pekko ActorSystem initialized successfully");
         return actorSystem;
     }
 
@@ -91,7 +91,7 @@ public class AkkaConfig {
     }
 
     /**
-     * Configure ObjectMapper for Jackson serialization (used by Akka)
+     * Configure ObjectMapper for Jackson serialization (used by Apache Pekko)
      */
     @Bean
     public ObjectMapper objectMapper() {
@@ -112,12 +112,12 @@ public class AkkaConfig {
     @PreDestroy
     public void shutdown() {
         if (actorSystem != null) {
-            log.info("Shutting down Akka ActorSystem...");
+            log.info("Shutting down Apache Pekko ActorSystem...");
 
             try {
                 actorSystem.terminate();
                 actorSystem.getWhenTerminated().toCompletableFuture().get();
-                log.info("Akka ActorSystem terminated gracefully");
+                log.info("Apache Pekko ActorSystem terminated gracefully");
             } catch (Exception e) {
                 log.error("Error during ActorSystem shutdown: {}", e.getMessage(), e);
             }

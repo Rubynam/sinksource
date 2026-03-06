@@ -212,3 +212,7 @@ Forwarded price check for Binance-BTCUSDT: current=64757.80000000, previous=6475
 2026-03-01T15:59:23.150+07:00  WARN 92330 --- [sink-connect] [t-dispatcher-25] c.e.s.d.logic.alert.actor.AlertActor     : Alert 9f2a7bb7-bf5d-478f-93ed-001834294946 not initialized, ignoring price check
 ```
 - The problem is that, the first step, actor register alert price to local cache. Second step, i witness, AlertActor could not found the alert id and throw log not initialized, ignoring price check DUE TO the alert ID in cmd already have.
+
+### Task 14 [Migration] Akka framework is no longer free licence. You must change to apache pekko.
+Action: Read build gradle, remove akka and add Apache Pekko latest version.
+
